@@ -2,8 +2,254 @@ from math import *
 import numpy as np
 
 
+class Galcoords:
+
+    # Initializer / Instance Attributes
+    def __init__(self, usun=14., vrot_sun=253., wsun=7., rsun=8.122, **kwargs):
+        self.usun = usun
+        self.vrot_sun = vrot_sun
+        self.wsun = wsun
+        self.rsun = rsun
+
+        self.lb = False
+        self.uvw = False
+        self.gal_pos = False
+        self.gal_vel = False
+        self.sgr_LB = False
+        self.sgr_pos = False
+        self.sgr_vel = False
+
+        self.ra = None
+        self.dec = None
+        self.l = None
+        self.b = None
+        self.pm_ra = None
+        self.pm_ra_e = None
+        self.pm_dec = None
+        self.pm_dec_e = None
+        self.v_rad = None
+        self.v_rad_e = None
+        self.dist = None
+        self.sigma_dist = None
+        self.parallax = None
+        self.parallax_e = None
+
+        self.update_values(**kwargs)
+
+        if self.l is not None and self.b is not None:
+            self.lb = True
+
+    def update_values(self, ra=None, dec=None, l=None, b=None, pm_ra=None,
+                      pm_ra_e=None, pm_dec=None, pm_dec_e=None, v_rad=None,
+                      v_rad_e=None, dist=None, sigma_dist=None, parallax=None,
+                      parallax_e=None, use_dist=False):
+        '''
+        parallaxes and proper motions should be entered in arcsec and arcsec/yr
+        distances should be entered in kpc.  If distances and parallaxes are
+        entered, parallaxes will be preferred and if lower and upper
+        uncertainties are given on distances in addition to a mean uncertainty
+        the distance uncertainty will be calculated using the average of the
+        upper and lower.
+        '''
+
+        keys = ['ra', 'dec', 'l', 'b', 'pm_ra', 'pm_ra_e', 'pm_dec', 'pm_dec_e',
+                'v_rad', 'v_rad_e', 'dist', 'sigma_dist', 'parallax',
+                'parallax_e']
+
+        input_values = [ra, dec, l, b, pm_ra, pm_ra_e, pm_dec, pm_dec_e, v_rad,
+                        v_rad_e, dist, sigma_dist, parallax, parallax_e]
+
+        for key, value in zip(keys, input_values):
+            if value is not None:
+                setattr(self, key, value)
+
+        if use_dist:
+            self.parallax = 1. / self.dist
+            self.parallax_e = self.sigma_dist / (self.dist**2.)
+
+    def check_inputs(self, input_param, input_values, uncertainty_keys,
+                     input_uncertainties):
+
+        for key, value in input_param.items():
+            if value is None:
+                raise TypeError(f'Please input a value for {key}.')
+
+        for input_uncertainty, unc_key, input_value in zip(input_uncertainties,
+                                                           uncertainty_keys,
+                                                           input_values):
+            if input_uncertainty is None:
+                setattr(self, unc_key, np.zeros(len(input_value)))
+
+    def calculate_helio_vel(self, **kwargs):
+
+        self.update_values(**kwargs)
+
+        input_param = {'ra': self.ra, 'dec': self.dec,
+                       'parallax or dist': self.parallax,
+                       'v_rad': self.v_rad, 'pm_ra': self.pm_ra,
+                       'pm_dec': self.pm_dec}
+        input_values = [self.parallax, self.v_rad, self.pm_ra, self.pm_dec]
+        uncertainty_keys = ['parallax_e', 'v_rad_e', 'pm_ra_e', 'pm_dec_e']
+        input_uncertainties = [self.parallax_e, self.v_rad_e, self.pm_ra_e,
+                               self.pm_dec_e]
+
+        self.check_inputs(input_param, input_values, uncertainty_keys,
+                          input_uncertainties)
+
+        self._calc_galuvw()
+
+    def calculate_gal_lb(self, **kwargs):
+
+        self.update_values(**kwargs)
+        input_param = {'ra': self.ra, 'dec': self.dec}
+        input_values = []
+        uncertainty_keys = []
+        input_uncertainties = []
+        self.check_inputs(input_param, input_values, uncertainty_keys,
+                          input_uncertainties)
+        self._calc_lb()
+        self.lb = True
+
+    def calculate_gal_pos(self, **kwargs):
+
+        if self.lb:
+            self.update_values(**kwargs)
+        else:
+            self.calculate_gal_lb(**kwargs)
+
+        input_param = {'dist': self.dist}
+        input_values = [self.dist]
+        uncertainty_keys = ['sigma_dist']
+        input_uncertainties = [self.sigma_dist]
+        self.check_inputs(input_param, input_values, uncertainty_keys,
+                          input_uncertainties)
+        self._calc_galpos()
+        self.gal_pos = True
+
+    def calculate_gal_vel(self, update_inputs=False, **kwargs):
+
+        if not self.uvw or update_inputs:
+            self.calculate_helio_vel(**kwargs)
+        if not self.gal_pos or update_inputs:
+            self.calculate_gal_pos(**kwargs)
+
+        self._calc_galvel()
+        self.gal_vel = True
+
+    def calculate_sgr_lb(self, **kwargs):
+
+        if self.gal_pos:
+            self._calc_sgrlb_xyz()
+        else:
+            if not self.lb:
+                self.calculate_gal_lb(**kwargs)
+            self._calc_sgrlb_lb()
+        self.sgr_LB = True
+
+    def calculate_sgr_pos(self, **kwargs):
+
+        if not self.sgr_LB:
+            self.calculate_sgr_lb(**kwargs)
+        if not self.gal_pos:
+            self.calculate_gal_pos(**kwargs)
+
+        self._calc_sgrpos()
+        self.sgr_pos = True
+
+    def calculate_sgr_system(self, **kwargs):
+
+        if not self.sgr_LB:
+            self.calculate_sgr_lb(**kwargs)
+        if not self.gal_vel:
+            self.calculate_gal_vel(**kwargs)
+
+        self._calc_sgrvel()
+        self.sgr_vel = True
+
+    def _calc_galuvw(self):
+
+        self.dist, self.sigma_dist, self.U, self.sigma_U, self.V, \
+            self.sigma_V, self.W, self.sigma_W = gal_uvw(self.ra, self.dec,
+                                                         self.parallax,
+                                                         self.parallax_e,
+                                                         self.v_rad,
+                                                         self.v_rad_e,
+                                                         self.pm_ra,
+                                                         self.pm_ra_e,
+                                                         self.pm_dec,
+                                                         self.pm_dec_e)
+
+    def _calc_lb(self):
+
+        self.l, self.b = gal_lb(self.ra, self.dec)
+
+    def _calc_galpos(self):
+
+        self.x, self.y, self.z, self.R_cyn, self.phi, self.r_sph, \
+            self.sigma_x, self.sigma_y, self.sigma_z, self.sigma_R_cyn, \
+            self.sigma_r_sph, self.sigma_phi = gal_coords_err(self.l, self.b,
+                                                              self.dist,
+                                                              self.sigma_dist,
+                                                              self.rsun)
+
+    def _calc_galvel(self):
+
+        self.vx, self.sigma_vx, self.vy, self.sigma_vy, self.vz, \
+            self.sigma_vz, self.vR, self.sigma_vR, self.vphi, \
+            self.sigma_vphi = gal_vel(self.R_cyn, self.phi, self.sigma_phi,
+                                      self.usun, self.vrot_sun, self.wsun,
+                                      self.U, self.sigma_U, self.V,
+                                      self.sigma_V, self.W, self.sigma_W)
+
+    def _calc_sgrlb_xyz(self):
+
+        self.lambda_sun, self.beta_sun = sgr_coords(self.x, self.y, self.z,
+                                                    self.rsun)
+
+    def _calc_sgrlb_lb(self):
+
+        self.lambda_sun, self.beta_sun = sgr_coords_lb(self.l, self.b)
+
+    def _calc_sgrpos(self):
+        self.lambda_gc, self.beta_gc, self.xs, self.ys, self.zs, self.r_cys, \
+            self.sigma_lambda_gc, self.sigma_xs, self.sigma_ys, self.sigma_zs, \
+            self.sigma_r_cys = sgr_pos(self.x, self.y, self.z, self.rsun,
+                                       self.sigma_x, self.sigma_y, self.sigma_z)
+
+    def _calc_sgrvel(self):
+
+        self.lambda_gc, self.beta_gc, self.xs, self.ys, self.zs, self.r_cys, \
+            self.vxs, self.vys, self.vzs, self.vrs, self.vphis, \
+            self.sigma_lambda_gc, self.sigma_xs, self.sigma_ys, self.sigma_zs, \
+            self.sigma_r_cys, self.sigma_vxs, self.sigma_vys, self.sigma_vzs, \
+            self.sigma_vrs, self.sigma_vphis = sgr_system(self.x, self.y,
+                                                          self.z, self.vx,
+                                                          self.vy, self.vz,
+                                                          self.rsun,
+                                                          self.sigma_x,
+                                                          self.sigma_y,
+                                                          self.sigma_z,
+                                                          self.sigma_vx,
+                                                          self.sigma_vy,
+                                                          self.sigma_vz)
+
+
 def gal_uvw(ra, dec, parallax, parallax_e, v_r, v_r_e, pm_ra, pm_ra_e,
             pm_dec, pm_dec_e):
+    '''
+    gal_uvw calculates distances, and U, V, and W velocities and their
+    uncertainties from sky positions (RA and Dec), parallaxes, radial
+    velocities, and proper motions following calculations from
+    Johnson and Soderblom (1987, AJ, 93, 864)
+
+    Requires that ra, dec, parallax, radial velocity (helio/barycentric; v_r)
+    proper motion in ra and dec (pm_ra and pm_dec respectively) and their
+    uncertainties (i.e., variables ending in _e) are given.  If uncertainties
+    are not known, enter zeros.
+
+    Entries can be individaul values or numpy-like arrays of matching lengths.
+    '''
+
     # theta_0 = np.deg2rad(123.) #B1950
     # ra_ngp = np.deg2rad(192.25) #B1950
     # dec_ngp = np.deg2rad(27.4) #B1950
@@ -302,6 +548,80 @@ def sgr_system(x, y, z, vx, vy, vz, xsun, sigma_x, sigma_y, sigma_z, sigma_vx,
     return lambda_s, beta, xs, ys, zs, r_cys, vxs, vys, vzs, vrs, vphis, \
         lambda_s_err, xs_err, ys_err, zs_err, r_cys_err, vxs_err, vys_err, \
         vzs_err, sigma_vrs, sigma_vphis
+
+
+def sgr_pos(x, y, z, xsun, sigma_x, sigma_y, sigma_z):
+
+    phi = np.deg2rad(180. + 3.75)
+    theta = np.deg2rad(90. - 13.46)
+    psiGC = np.deg2rad(180. + 21.604339)
+    psi_sun = np.deg2rad(180. + 21.604339)
+
+    # ang is the rotation of phiGC past 180
+    ang = np.deg2rad(21.604399)
+
+    xcenter = -8.5227
+    ycenter = -0.3460
+    zcenter = -0.828
+
+    GCrot11 = np.cos(psiGC) * np.cos(phi) - np.cos(theta) * \
+        np.sin(phi) * np.sin(psiGC)
+    GCrot12 = np.cos(psiGC) * np.sin(phi) + np.cos(theta) * \
+        np.cos(phi) * np.sin(psiGC)
+    GCrot13 = np.sin(psiGC) * np.sin(theta)
+    GCrot21 = -np.sin(psiGC) * np.cos(phi) - np.cos(theta) * \
+        np.sin(phi) * np.cos(psiGC)
+    GCrot22 = -np.sin(psiGC) * np.sin(phi) + np.cos(theta) * \
+        np.cos(phi) * np.cos(psiGC)
+    GCrot23 = np.cos(psiGC) * np.sin(theta)
+    GCrot31 = np.sin(theta) * np.sin(phi)
+    GCrot32 = -np.sin(theta) * np.cos(phi)
+    GCrot33 = np.cos(theta)
+
+    x = -x
+    x = x + xsun
+
+    temp = GCrot11 * (x + xcenter) + GCrot12 * \
+        (y - ycenter) + GCrot13 * (z - zcenter)
+    temp2 = GCrot21 * (x + xcenter) + GCrot22 * \
+        (y - ycenter) + GCrot23 * (z - zcenter)
+    zs = GCrot31 * (x + xcenter) + GCrot32 * \
+        (y - ycenter) + GCrot33 * (z - zcenter)
+    d = np.sqrt(temp * temp + temp2 * temp2 + zs * zs)
+
+    temp_err = np.sqrt((GCrot11 * sigma_x)**2. +
+                       (GCrot12 * sigma_y)**2. + (GCrot13 * sigma_z)**2.)
+    temp2_err = np.sqrt((GCrot21 * sigma_x)**2. +
+                        (GCrot22 * sigma_y)**2. + (GCrot23 * sigma_z)**2.)
+    zs_err = np.sqrt((GCrot31 * sigma_x)**2. +
+                     (GCrot32 * sigma_y)**2. + (GCrot33 * sigma_z)**2.)
+
+    zs = -zs
+
+    temp3 = np.rad2deg(np.arctan2(temp2, temp))
+    temp3[temp3 < 0.] = temp3[temp3 < 0.] + 360.
+    temp3 = temp3 + np.rad2deg(ang)
+    temp3[temp3 > 360.] = temp3[temp3 > 360.] - 360.
+    lambda_s = temp3
+    beta = np.rad2deg(
+        np.arcsin(zs / np.sqrt(temp * temp + temp2 * temp2 + zs * zs)))
+
+    lambda_s_err = np.sqrt((temp_err**2. * temp2**2. +
+                            temp2_err**2. * temp**2.) /
+                           (temp**2. + temp2**2.)**2.)
+
+    xs = temp * np.cos(ang) - temp2 * np.sin(ang)
+    ys = temp * np.sin(ang) + temp2 * np.cos(ang)
+    r_cys = np.sqrt(xs**2. + ys**2.)
+
+    xs_err = np.sqrt((temp_err * np.cos(ang))**2. +
+                     (temp2_err * np.sin(ang))**2.)
+    ys_err = np.sqrt((temp_err * np.sin(ang))**2. +
+                     (temp2_err * np.cos(ang))**2.)
+    r_cys_err = np.sqrt(((xs * xs_err)**2. + (ys * ys_err)**2.) / r_cys**2.)
+
+    return lambda_s, beta, xs, ys, zs, r_cys, lambda_s_err, xs_err, ys_err, \
+        zs_err, r_cys_err
 
 
 def sgr_coords_lb(l, b):
