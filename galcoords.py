@@ -45,7 +45,7 @@ class Galcoords:
                       parallax_e=None, use_dist=False):
         '''
         parallaxes and proper motions should be entered in arcsec and arcsec/yr
-        distances should be entered in kpc.  If distances and parallaxes are
+        distances should be entered in pc.  If distances and parallaxes are
         entered, parallaxes will be preferred and if lower and upper
         uncertainties are given on distances in addition to a mean uncertainty
         the distance uncertainty will be calculated using the average of the
