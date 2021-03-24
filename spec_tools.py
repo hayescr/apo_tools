@@ -109,21 +109,22 @@ def readspec(filename, extension):
     Returns the wavelength and flux of the 1D spectrum.
     '''
 
-    file = fits.open(filename)
-    flux = file[extension].data
-    header = file[extension].header
+    with fits.open(filename) as file:
+        file = fits.open(filename)
+        flux = file[extension].data
+        header = file[extension].header
 
-    ctype = header['CTYPE1']
-    cdelt = header['CDELT1']
-    crpix = header['CRPIX1']
-    cinit = header['CRVAL1']
-    naxis1 = header['NAXIS1']
+        ctype = header['CTYPE1']
+        cdelt = header['CDELT1']
+        crpix = header['CRPIX1']
+        cinit = header['CRVAL1']
+        naxis1 = header['NAXIS1']
 
-    if ctype == 'LINEAR' or ctype == 'WAVELENGTH':
-        wavelength = (np.arange(naxis1) + crpix) * cdelt + cinit
+        if ctype == 'LINEAR' or ctype == 'WAVELENGTH':
+            wavelength = (np.arange(naxis1) + crpix) * cdelt + cinit
 
-    if ctype == 'LOG-LINEAR':
-        wavelength = np.power(10., (np.arange(naxis1)) * cdelt + cinit)
+        if ctype == 'LOG-LINEAR':
+            wavelength = np.power(10., (np.arange(naxis1)) * cdelt + cinit)
 
     return wavelength, flux
 
