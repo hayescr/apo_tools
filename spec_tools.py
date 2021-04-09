@@ -1,5 +1,6 @@
 import numpy as np
 import requests
+import os
 from astropy.io import fits
 
 
@@ -34,21 +35,24 @@ class AspcapStar:
         self.dr16_fit = Spectrum(
             *self.get_spectrum(BASE_DIRECTORY, 'r12', 'l33', 3))
 
-    def get_spectrum(self, input_directory, reduction, library, extension):
+    def get_spectrum(self, input_directory, reduction, library, extension,
+                     save_file=False, **kwargs):
         '''
         Opens an aspcapStar spectrum file from the input directory, reduction
         version and library to the specified path.
         '''
 
-        fileurl = input_directory + '{}/{}/{}/{}/aspcapStar-{}-{}.fits'.format(
-            reduction, library, self.telescope, self.field, reduction,
-            self.apogee_id)
+        local_filepath = self.download_spectrum(
+            input_directory, reduction, library, **kwargs)
 
-        wave, data = readspec(fileurl, extension)
+        wave, data = readspec(local_filepath, extension)
 
         data_m = np.ma.masked_where(data == 0, data)
         data_m = data
         data_m[data_m == 0] = np.nan
+
+        if not save_file:
+            os.remove(local_filepath)
 
         return wave, data_m
 
@@ -72,9 +76,15 @@ class AspcapStar:
             self.apogee_id)
 
         filepath = requests.get(fileurl, **kwargs)
+        filepath.raise_for_status()
 
-        open(path + 'aspcapStar-{}-{}.fits'.format(reduction, self.apogee_id),
-             'wb').write(filepath.content)
+        local_filepath = path + \
+            'aspcapStar-{}-{}.fits'.format(reduction, self.apogee_id)
+
+        with open(local_filepath, 'wb') as file:
+            file.write(filepath.content)
+
+        return local_filepath
 
 
 class Spectrum:
@@ -82,24 +92,8 @@ class Spectrum:
         self.wavelength = wavelength
         self.flux = flux
 
-    def air_conversion(self):
-
-        a = 0.0
-        b1 = 5.792105e-2
-        b2 = 1.67917e-3
-        c1 = 238.0185
-        c2 = 57.362
-
-        wave_vac = self.wave / 10000.
-
-        air_conv = a + (b1 / (c1 - 1 / (wave_vac**2.))) + \
-            (b2 / (c2 - 1 / (wave_vac**2.))) + 1
-
-        wave_air = wave_vac / air_conv
-
-        wave_air = wave_air * 10000.
-
-        self.wavelength_air = wave_air
+    def vac_to_air(self):
+        self.wavelength_air = air_conversion(self.wavelength)
 
 
 def readspec(filename, extension):
@@ -151,6 +145,18 @@ def air_spec(filename, extension=1):
     '''
 
     wave, data = readspec(filename, extension)
+    wave_air = air_conversion(wave)
+    data_m = np.ma.masked_where(data == 0, data)
+
+    return wave_air, data_m
+
+
+def air_conversion(wave):
+    '''
+    Converts a vacuum wavelength spectrum to air following Shetrone et al.
+    (2015) and masks pixels with 0 flux.  Returns the wavelength and flux as a
+    numpy-like array.
+    '''
 
     a = 0.0
     b1 = 5.792105e-2
@@ -165,6 +171,5 @@ def air_spec(filename, extension=1):
 
     wave_air = wave / air_conv
     wave_air = wave_air * 10000.
-    data_m = np.ma.masked_where(data == 0, data)
 
-    return wave_air, data_m
+    return wave_air
