@@ -34,13 +34,13 @@ class AspcapStar:
         self.dr16_fit = Spectrum(
             *self.get_spectrum(BASE_DIRECTORY, 'r12', 'l33', 3))
 
-    def get_spectrum(self, base_directory, reduction, library, extension):
+    def get_spectrum(self, input_directory, reduction, library, extension):
         '''
         Opens an aspcapStar spectrum file from the input directory, reduction
         version and library to the specified path.
         '''
 
-        fileurl = base_directory + '{}/{}/{}/{}/aspcapStar-{}-{}.fits'.format(
+        fileurl = input_directory + '{}/{}/{}/{}/aspcapStar-{}-{}.fits'.format(
             reduction, library, self.telescope, self.field, reduction,
             self.apogee_id)
 
@@ -60,14 +60,14 @@ class AspcapStar:
         self.download_spectrum(BASE_DIRECTORY, 'r12',
                                'l33', path=path, **kwargs)
 
-    def download_spectrum(self, base_directory, reduction, library, path='', **kwargs):
+    def download_spectrum(self, input_directory, reduction, library, path='', **kwargs):
         '''
         Downloads an aspcapStar spectrum file from the input directory, reduction
         version and library to the specified path.  If authentification is
         required submit requests keywords through **kwargs.
         '''
 
-        fileurl = base_directory + '{}/{}/{}/{}/aspcapStar-{}-{}.fits'.format(
+        fileurl = input_directory + '{}/{}/{}/{}/aspcapStar-{}-{}.fits'.format(
             reduction, library, self.telescope, self.field, reduction,
             self.apogee_id)
 
@@ -111,7 +111,7 @@ def readspec(filename, extension):
     '''
 
     with fits.open(filename) as file:
-        file = fits.open(filename)
+        # file = fits.open(filename)
         flux = file[extension].data
         header = file[extension].header
 
