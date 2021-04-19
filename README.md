@@ -54,3 +54,7 @@ Calculating Sgr system coordinates, positions and velocities give similar values
 ## spec_tools.py
 
 spec_tools.py contains functions to work with APOGEE spectra, such as opening or downloading spectra from the web and tools to read APOGEE spectra files, mask empty pixels, and convert between vacuum and air wavelengths.
+
+## cno_combine.py
+
+cno_combine.py provides a function to calculate the combined abundance of C and N - [(C+N)/Fe], and C, N, and O - [(C+N+O)/Fe].  Useful for giants where C and N are not conserved and altered due to dredge up, but their sum is nearly conserved and C, N, and O should be conserved together.
