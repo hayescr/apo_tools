@@ -13,7 +13,8 @@ Methods of interest:
 
 
 Usage with distances in parsecs (set up for Gaia proper motions which are reported in mas/yr):
-'from galcoords import Galcoords
+'''python
+from galcoords import Galcoords
 new_coords = Galcoords(ra=ra, dec=dec, l=glon,
                        b=glat, pm_ra=gaia_pmra / 1000.,
                        pm_ra_e=gaia_pmra_error / 1000.,
@@ -22,11 +23,13 @@ new_coords = Galcoords(ra=ra, dec=dec, l=glon,
                        v_rad=v_rad, v_rad_e=v_rad_error,
                        dist=dist,
                        sigma_dist=dist_error, use_dist=True)
-new_coords.calculate_gal_vel()'
+new_coords.calculate_gal_vel()
+'''
 
 Usage with parallaxes (set up for Gaia parallaxes and proper motions which are reported in mas and mas/yr):
 
-'from galcoords import Galcoords
+'''python
+from galcoords import Galcoords
 new_coords = Galcoords(ra=ra, dec=dec, l=glon,
                        b=glat, pm_ra=gaia_pmra / 1000.,
                        pm_ra_e=gaia_pmra_error / 1000.,
@@ -35,7 +38,8 @@ new_coords = Galcoords(ra=ra, dec=dec, l=glon,
                        v_rad=v_rad, v_rad_e=v_rad_error,
                        parallax=gaia_parallax / 1000.,
                        parallax_e=gaia_parallax_error/ 1000.)
-new_coords.calculate_gal_vel()'
+new_coords.calculate_gal_vel()
+'''
 
 Once these methods have been used you can access the positions and velocities as object attributes (new_coord.xxxxx) and their estimated uncertainties (new_coord.sigma_xxxxx):
 
