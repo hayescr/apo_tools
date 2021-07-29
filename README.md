@@ -2,6 +2,10 @@
 
 This is a repository of various tools that I use to work with, analyze and visualize APOGEE data.
 
+## aspcap_star_example_notebook.ipynb
+
+aspcap_star_example_notebook.ipynb is a Jupyter notebook that gives a walkthrough for using the AspcapStar class in spec_tools.py, and the window plotting functions in spec_plotting.py to plot download and plot APOGEE spectra in a variety of different ways.
+
 ## galcoords.py
 
 galcoords.py contains functions to convert between observed values in equatorial coordinates, such as RA, Dec, distance, radial velocity and proper motion to galactic coordinates, or to convert galactic coordinates to the Sagittarius coordinate system as defined by Majewski et al. 2003 and Law and Majewski 2010.
@@ -54,6 +58,10 @@ Calculating Sgr system coordinates, positions and velocities give similar values
 ## spec_tools.py
 
 spec_tools.py contains functions to work with APOGEE spectra, such as opening or downloading spectra from the web and tools to read APOGEE spectra files, mask empty pixels, and convert between vacuum and air wavelengths.
+
+## spec_plotting.py
+
+spec_plotting.py contains functions useful for plotting APOGEE spectra, such as functions to plot the elemental abundance windows in the windows folder.
 
 ## cno_combine.py
 
