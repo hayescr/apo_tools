@@ -36,14 +36,18 @@ class AspcapStar:
             *self.get_spectrum(BASE_DIRECTORY, 'r12', 'l33', 3))
 
     def get_spectrum(self, input_directory, reduction, library, extension,
-                     save_file=False, **kwargs):
+                     path='', save_file=False, **kwargs):
         '''
         Opens an aspcapStar spectrum file from the input directory, reduction
         version and library to the specified path.
         '''
 
-        local_filepath = self.download_spectrum(
-            input_directory, reduction, library, **kwargs)
+        local_filepath = path + \
+            'aspcapStar-{}-{}.fits'.format(reduction, self.apogee_id)
+
+        if not os.path.isfile(local_filepath):
+            self.download_spectrum(
+                input_directory, reduction, library, local_filepath, **kwargs)
 
         wave, data = readspec(local_filepath, extension)
 
@@ -56,6 +60,29 @@ class AspcapStar:
 
         return wave, data_m
 
+    def get_summarytable(self, input_directory, reduction, library, extension,
+                         path='', save_file=False, **kwargs):
+        '''
+        Opens an aspcapStar spectrum file from the input directory, reduction
+        version and library to the specified path and returns the summary
+        table.
+        '''
+
+        local_filepath = path + \
+            'aspcapStar-{}-{}.fits'.format(reduction, self.apogee_id)
+
+        if not os.path.isfile(local_filepath):
+            self.download_spectrum(
+                input_directory, reduction, library, local_filepath, **kwargs)
+
+        with fits.open(local_filepath) as file:
+            summary = file[extension].data
+
+        if not save_file:
+            os.remove(local_filepath)
+
+        return summary
+
     def download_dr16(self, path='', **kwargs):
         '''
         Downloads the DR16 aspcapStar spectrum and saves it to the input
@@ -64,11 +91,12 @@ class AspcapStar:
         self.download_spectrum(BASE_DIRECTORY, 'r12',
                                'l33', path=path, **kwargs)
 
-    def download_spectrum(self, input_directory, reduction, library, path='', **kwargs):
+    def download_spectrum(self, input_directory, reduction, library,
+                          local_filepath, **kwargs):
         '''
-        Downloads an aspcapStar spectrum file from the input directory, reduction
-        version and library to the specified path.  If authentification is
-        required submit requests keywords through **kwargs.
+        Downloads an aspcapStar spectrum file from the input directory,
+        reduction version and library to the specified path.  If
+        authentification is required submit requests keywords through **kwargs.
         '''
 
         fileurl = input_directory + '{}/{}/{}/{}/aspcapStar-{}-{}.fits'.format(
@@ -78,13 +106,8 @@ class AspcapStar:
         filepath = requests.get(fileurl, **kwargs)
         filepath.raise_for_status()
 
-        local_filepath = path + \
-            'aspcapStar-{}-{}.fits'.format(reduction, self.apogee_id)
-
         with open(local_filepath, 'wb') as file:
             file.write(filepath.content)
-
-        return local_filepath
 
 
 class Spectrum:
