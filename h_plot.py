@@ -1,19 +1,7 @@
-import sys
-import os.path
-from math import *
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib import rcParams
-from matplotlib import rc
 from matplotlib import colors
-import matplotlib.patches as patch
-from matplotlib.collections import PatchCollection
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from matplotlib.ticker import LogFormatterExponent
-import matplotlib.colorbar as colorbar
-import colormaps as cmaps
-from matplotlib.ticker import ScalarFormatter
+from matplotlib.ticker import LogFormatterExponent, ScalarFormatter
 
 
 def density2d_to_points(x, y, ax=None, bins=150, masklim=5, xlim=None,
