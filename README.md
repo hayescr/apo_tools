@@ -66,3 +66,7 @@ spec_plotting.py contains functions useful for plotting APOGEE spectra, such as 
 ## cno_combine.py
 
 cno_combine.py provides a function to calculate the combined abundance of C and N - [(C+N)/Fe], and C, N, and O - [(C+N+O)/Fe].  Useful for giants where C and N are not conserved and altered due to dredge up, but their sum is nearly conserved and C, N, and O should be conserved together.
+
+## abund_utils.py
+
+abund_utils.py provides some basic utiilities for working with abundances, such as dictionaries of solar abundances, and functions for converting between atomic symbol and number
