@@ -5,6 +5,16 @@ from astropy.io import fits
 
 
 BASE_DIRECTORY = 'https://dr16.sdss.org/sas/dr16/apogee/spectro/aspcap/'
+BASE_DIRECTORY_DR17 = 'https://dr17.sdss.org/sas/dr17/apogee/spectro/aspcap/'
+
+library_dict = {
+    'synspec_rev1': ['dr17', 'synspec_rev1', 'syn_rev1'],
+    'synspec': ['synspec', 'syn'],
+    'synspec_lte': ['synspec_lte', 'syn_lte'],
+    'turbo20': ['turbo20', 'turbospec', 'turbo', 'ts',
+                'turbospec_sph', 'turbo_sph', 'ts_sph'],
+    'turbo20_pp': ['turbo20_pp', 'turbospec_pp', 'turbo_pp', 'ts_pp'],
+}
 
 
 class AspcapStar:
@@ -110,6 +120,24 @@ class AspcapStar:
             file.write(filepath.content)
 
 
+class AspcapStarDR17(AspcapStar):
+    def __init__(self, telescope, field, apogee_id, version='dr17'):
+        super().__init__(telescope, field, apogee_id, version)
+        for library, version_options in library_dict.items():
+            if version in version_options:
+                self.get_version(library)
+
+    def get_version(self, library):
+        self.obs = Spectrum(*self.get_spectrum(BASE_DIRECTORY_DR17, 'dr17',
+                                               library, 1, save_file=True))
+        self.fit = Spectrum(*self.get_spectrum(BASE_DIRECTORY_DR17, 'dr17',
+                                               library, 3, save_file=True))
+        self.err = Spectrum(*self.get_spectrum(BASE_DIRECTORY_DR17, 'dr17',
+                                               library, 2, save_file=True))
+        self.info_table = self.get_summarytable(BASE_DIRECTORY_DR17, 'dr17',
+                                                library, 4)
+
+
 class Spectrum:
     def __init__(self, wavelength, flux):
         self.wavelength = wavelength
@@ -121,8 +149,9 @@ class Spectrum:
 
 def readspec(filename, extension):
     '''
-    A function designed for easy reading of fits 1D spectra files. Filenames can
-    either be input as a local fits file or as a URL to files at a URL link.
+    A function designed for easy reading of fits 1D spectra files. Filenames
+    can either be input as a local fits file or as a URL to files at a URL
+    link.
 
     Returns the wavelength and flux of the 1D spectrum.
     '''
