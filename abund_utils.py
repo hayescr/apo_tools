@@ -404,6 +404,11 @@ def solar_abund(reference="asplund2009"):
             'U': -0.54  # Meteoric abundances
         }
 
+    else:
+        raise ValueError('This solar reference is not included at the moment. '
+                         'Available solar references are Asplund2005 and '
+                         'Asplund2009')
+
     return solar_abu
 
 
