@@ -226,6 +226,32 @@ atomic_numbers = {
     111: 'Rg',
 }
 
+ion_symbols = {
+    'I': 1,
+    'II': 2,
+    'III': 3,
+    'IV': 4,
+    'V': 5,
+    'VI': 6,
+    'VII': 7,
+    'VIII': 8,
+    'IX': 9,
+    'X': 10,
+}
+
+ion_numbers = {
+    1: 'I',
+    2: 'II',
+    3: 'III',
+    4: 'IV',
+    5: 'V',
+    6: 'VI',
+    7: 'VII',
+    8: 'VIII',
+    9: 'IX',
+    10: 'X',
+}
+
 
 def solar_abund(reference="asplund2009"):
     a05 = ['asplund2005', 'asplund_2005', 'a05', 'a_05']
@@ -418,3 +444,14 @@ def atomic_sym_to_num(symbol):
 
 def atomic_num_to_sym(number):
     return atomic_numbers[int(number)]
+
+
+def ion_sym_to_num(symbol):
+    return ion_numbers[symbol.upper()]
+
+
+def ion_num_to_sym(number):
+    return ion_symbols[int(number)]
+
+
+ALPHAS = ['O', 'Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Ti']
