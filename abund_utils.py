@@ -447,11 +447,11 @@ def atomic_num_to_sym(number):
 
 
 def ion_sym_to_num(symbol):
-    return ion_numbers[symbol.upper()]
+    return ion_symbols[symbol.upper()]
 
 
 def ion_num_to_sym(number):
-    return ion_symbols[int(number)]
+    return ion_numbers[int(number)]
 
 
 ALPHAS = ['O', 'Ne', 'Mg', 'Si', 'S', 'Ar', 'Ca', 'Ti']
