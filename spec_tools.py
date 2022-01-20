@@ -146,6 +146,9 @@ class Spectrum:
     def vac_to_air(self):
         self.wavelength_air = air_conversion(self.wavelength)
 
+    def vel_shift(self, velocity):
+        return velocity_shift(self.wavelength, velocity)
+
 
 def readspec(filename, extension):
     '''
@@ -167,7 +170,7 @@ def readspec(filename, extension):
         cinit = header['CRVAL1']
         naxis1 = header['NAXIS1']
 
-        if ctype == 'LINEAR' or ctype == 'WAVELENGTH':
+        if ctype in ['LINEAR', 'WAVELENGTH', 'AWAV']:
             wavelength = (np.arange(naxis1) + crpix) * cdelt + cinit
 
         if ctype == 'LOG-LINEAR':
@@ -225,3 +228,8 @@ def air_conversion(wave):
     wave_air = wave_air * 10000.
 
     return wave_air
+
+
+def velocity_shift(wavelength, velocity):
+    c = 2.99792458e5
+    return wavelength * (1 + (velocity / c))
