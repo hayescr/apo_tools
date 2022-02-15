@@ -209,8 +209,7 @@ def air_spec(filename, extension=1):
 def air_conversion(wave):
     '''
     Converts a vacuum wavelength spectrum to air following Shetrone et al.
-    (2015) and masks pixels with 0 flux.  Returns the wavelength and flux as a
-    numpy-like array.
+    (2015).
     '''
 
     a = 0.0
