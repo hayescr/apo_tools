@@ -2,6 +2,8 @@ import numpy as np
 import requests
 import os
 from astropy.io import fits
+from scipy.interpolate import InterpolatedUnivariateSpline
+
 
 
 BASE_DIRECTORY = 'https://dr16.sdss.org/sas/dr16/apogee/spectro/aspcap/'
@@ -139,15 +141,25 @@ class AspcapStarDR17(AspcapStar):
 
 
 class Spectrum:
-    def __init__(self, wavelength, flux):
+    def __init__(self, wavelength, flux, variance=None):
         self.wavelength = wavelength
         self.flux = flux
+        if variance is not None:
+            self.variance = variance
 
     def vac_to_air(self):
         self.wavelength_air = air_conversion(self.wavelength)
 
     def vel_shift(self, velocity):
         return velocity_shift(self.wavelength, velocity)
+
+    def interpolate_spectrum(self, new_wavelength):
+        ip = interpolate.InterpolatedUnivariateSpline(self.wavelength,
+                                                      self.flux,
+                                                      k=3, ext='zeros')
+        self.wavelength = new_wavelength
+        self.flux = ip(new_wavelength)
+
 
 
 def readspec(filename, extension):
