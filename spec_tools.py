@@ -2,8 +2,7 @@ import numpy as np
 import requests
 import os
 from astropy.io import fits
-from scipy.interpolate import InterpolatedUnivariateSpline
-
+from scipy import interpolate
 
 
 BASE_DIRECTORY = 'https://dr16.sdss.org/sas/dr16/apogee/spectro/aspcap/'
@@ -159,7 +158,6 @@ class Spectrum:
                                                       k=3, ext='zeros')
         self.wavelength = new_wavelength
         self.flux = ip(new_wavelength)
-
 
 
 def readspec(filename, extension):
