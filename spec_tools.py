@@ -122,21 +122,35 @@ class AspcapStar:
 
 
 class AspcapStarDR17(AspcapStar):
-    def __init__(self, telescope, field, apogee_id, version='dr17'):
+    def __init__(self, telescope, field, apogee_id, version='dr17',
+                 download_only=False, path='', save_file=False):
         super().__init__(telescope, field, apogee_id, version)
         for library, version_options in library_dict.items():
             if version in version_options:
-                self.get_version(library)
+                if download_only:
+                    self.dr17_download(library, path)
+                else:
+                    self.get_version(library, path, save_file)
 
-    def get_version(self, library):
+    def get_version(self, library, path, save_file):
         self.obs = Spectrum(*self.get_spectrum(BASE_DIRECTORY_DR17, 'dr17',
-                                               library, 1, save_file=True))
+                                               library, 1, path=path,
+                                               save_file=True))
         self.fit = Spectrum(*self.get_spectrum(BASE_DIRECTORY_DR17, 'dr17',
-                                               library, 3, save_file=True))
+                                               library, 3, path=path,
+                                               save_file=True))
         self.err = Spectrum(*self.get_spectrum(BASE_DIRECTORY_DR17, 'dr17',
-                                               library, 2, save_file=True))
+                                               library, 2, path=path,
+                                               save_file=True))
         self.info_table = self.get_summarytable(BASE_DIRECTORY_DR17, 'dr17',
-                                                library, 4)
+                                                library, 4, path=path,
+                                                save_file=save_file)
+    def dr17_download(self, library, path):
+        output_filename = 'aspcapStar-{}-{}.fits'.format('dr17',
+                                                         self.apogee_id)
+        output_path = path + output_filename
+        self.download_spectrum(BASE_DIRECTORY_DR17, 'dr17', library,
+                               output_path)
 
 
 class Spectrum:
