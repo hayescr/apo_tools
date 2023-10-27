@@ -175,15 +175,24 @@ def readspec(filename, extension):
         header = file[extension].header
 
         ctype = header['CTYPE1']
-        cdelt = header['CDELT1']
+        if 'CDELT1' in header:
+            cdelt = header['CDELT1']
+        if 'CD1_1' in header:
+            cdelt = header['CD1_1']
         crpix = header['CRPIX1']
         cinit = header['CRVAL1']
         naxis1 = header['NAXIS1']
 
         if ctype in ['LINEAR', 'WAVELENGTH', 'AWAV']:
-            wavelength = (np.arange(naxis1) + crpix) * cdelt + cinit
+            wavelength = (np.arange(naxis1) + crpix ) * cdelt + cinit
 
-        if ctype == 'LOG-LINEAR':
+        if ctype in ['WAVE']:
+            new_cinit = np.log10(cinit)
+            new_cdelt = np.log10(cinit+cdelt)-new_cinit
+            wavelength = np.power(10., (np.arange(naxis1)-crpix) * new_cdelt + new_cinit)
+
+
+        if ctype in ['LOG-LINEAR']:
             wavelength = np.power(10., (np.arange(naxis1)) * cdelt + cinit)
 
     return wavelength, flux
