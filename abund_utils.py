@@ -528,6 +528,134 @@ def solar_abund(reference="asplund2009"):
     return solar_abu
 
 
+def solar_s_process_frac(reference='prantzos2020'):
+    if reference.lower() == 'prantzos2020':
+        s_frac = {
+            'Ga': 0.730,
+            'Ge': 0.636,
+            'As': 0.581,  # Meteoric abundances
+            'Se': 0.379,  # Meteoric abundances
+            'Br': 0.265,  # Meteoric abundances
+            'Kr': 0.387,  # Indirect estimate
+            'Rb': 0.510,
+            'Sr': 0.912,
+            'Y': 0.778,
+            'Zr': 0.817,
+            'Nb': 0.651,
+            'Mo': 0.497,
+            'Ru': 0.338,
+            'Rh': 0.122,
+            'Pd': 0.448,
+            'Ag': 0.209,
+            'Cd': 0.548,  # Meteoric abundances
+            'In': 0.374,
+            'Sn': 0.680,
+            'Sb': 0.247,  # Meteoric abundances
+            'Te': 0.192,  # Meteoric abundances
+            'I': 0.032,  # Meteoric abundances
+            'Xe': 0.182,  # Indirect estimate
+            'Cs': 0.157,  # Meteoric abundances
+            'Ba': 0.888,
+            'La': 0.799,
+            'Ce': 0.848,
+            'Pr': 0.535,
+            'Nd': 0.615,
+            'Sm': 0.325,
+            'Eu': 0.049,
+            'Gd': 0.163,
+            'Tb': 0.072,
+            'Dy': 0.151,
+            'Ho': 0.074,
+            'Er': 0.184,
+            'Tm': 0.128,
+            'Yb': 0.429,
+            'Lu': 0.204,
+            'Hf': 0.605,
+            'Ta': 0.503,  # Meteoric abundances
+            'W': 0.601,
+            'Re': 0.154,  # Meteoric abundances
+            'Os': 0.103,
+            'Ir': 0.011,
+            'Pt': 0.078,  # Meteoric abundances
+            'Au': 0.058,
+            'Hg': 0.548,  # Meteoric abundances
+            'Tl': 0.760,
+            'Pb': 0.8,
+            'Bi': 0.216,  # Meteoric abundances
+            'Th': 0.000,  # Meteoric abundances
+            'U': 0.000
+        }
+        return s_frac
+
+
+def solar_r_process_frac(reference='prantzos2020'):
+    if reference.lower() == 'prantzos2020':
+        r_frac = {
+            'Ga': 0.270,
+            'Ge': 0.364,
+            'As': 0.419,  # Meteoric abundances
+            'Se': 0.612,  # Meteoric abundances
+            'Br': 0.735,  # Meteoric abundances
+            'Kr': 0.610,  # Indirect estimate
+            'Rb': 0.490,
+            'Sr': 0.083,
+            'Y': 0.222,
+            'Zr': 0.183,
+            'Nb': 0.349,
+            'Mo': 0.275,
+            'Ru': 0.591,
+            'Rh': 0.878,
+            'Pd': 0.542,
+            'Ag': 0.791,
+            'Cd': 0.432,  # Meteoric abundances
+            'In': 0.582,
+            'Sn': 0.301,
+            'Sb': 0.753,  # Meteoric abundances
+            'Te': 0.807,  # Meteoric abundances
+            'I': 0.968,  # Meteoric abundances
+            'Xe': 0.816,  # Indirect estimate
+            'Cs': 0.843,  # Meteoric abundances
+            'Ba': 0.109,
+            'La': 0.200,
+            'Ce': 0.148,
+            'Pr': 0.465,
+            'Nd': 0.385,
+            'Sm': 0.647,
+            'Eu': 0.951,
+            'Gd': 0.835,
+            'Tb': 0.928,
+            'Dy': 0.847,
+            'Ho': 0.926,
+            'Er': 0.799,
+            'Tm': 0.872,
+            'Yb': 0.570,
+            'Lu': 0.796,
+            'Hf': 0.393,
+            'Ta': 0.497,  # Meteoric abundances
+            'W': 0.397,
+            'Re': 0.846,  # Meteoric abundances
+            'Os': 0.897,
+            'Ir': 0.989,
+            'Pt': 0.922,  # Meteoric abundances
+            'Au': 0.942,
+            'Hg': 0.450,  # Meteoric abundances
+            'Tl': 0.240,
+            'Pb': 0.169,
+            'Bi': 0.784,  # Meteoric abundances
+            'Th': 1.000,  # Meteoric abundances
+            'U': 1.000
+        }
+        return r_frac
+
+
+def solar_p_process_frac(reference='prantzos2020'):
+    if reference.lower() == 'prantzos2020':
+        s_frac = solar_s_process_frac(reference)
+        r_frac = solar_r_process_frac(reference)
+        p_frac = {key: 1.000 - s_frac[key] - r_frac[key] for key in s_frac}
+        return p_frac
+
+
 def atomic_sym_to_num(symbol):
     return atomic_symbols[symbol.title()]
 
